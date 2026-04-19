@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sergio Ortiz Soccer — Vista</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a18;}
+:root{--red:#E24B4A;--red-dark:#A32D2D;--red-light:#FCEBEB;--border:#e5e5e2;--bg:#fff;--bg2:#f5f5f3;--text:#1a1a18;--text2:#6b6b67;}
+
+/* MOBILE FIRST */
+.app{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.brand-ball{width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.brand-ball svg{width:16px;height:16px;}
+.brand-name{font-size:14px;font-weight:600;color:var(--text);line-height:1.2;}
+.brand-sub{font-size:11px;color:var(--text2);}
+.conn-status{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#639922;flex-shrink:0;}
+.conn-dot.err{background:var(--red);}
+.conn-dot.loading{background:#BA7517;animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.bottom-nav{background:#fff;border-top:1px solid var(--border);display:flex;position:sticky;bottom:0;z-index:100;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;font-size:10px;cursor:pointer;color:var(--text2);border-top:2px solid transparent;}
+.bnav-item.active{color:var(--red-dark);border-top-color:var(--red);}
+.bnav-icon{width:20px;height:20px;}
+
+.main{flex:1;padding:1rem;}
+.view{display:none;}
+.view.active{display:block;}
+.page-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:1rem;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1rem;}
+.stat{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.stat-label{font-size:11px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;}
+.stat-value{font-size:24px;font-weight:600;color:var(--text);}
+.stat-value.red{color:var(--red);}
+.stat-value.green{color:#3B6D11;}
+.stat-value.orange{color:#854F0B;}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:0.75rem;}
+
+.search-row{display:flex;gap:8px;margin-bottom:0.75rem;flex-wrap:wrap;}
+.search-row input,.search-row select{font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;width:100%;}
+.search-row input:focus,.search-row select:focus{border-color:var(--red);}
+
+/* PLAYER CARDS — mobile friendly */
+.player-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;}
+.player-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.av{width:36px;height:36px;border-radius:50%;background:var(--red-light);color:var(--red-dark);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+.player-name{font-size:14px;font-weight:500;color:var(--text);}
+.player-detail{font-size:12px;color:var(--text2);}
+.player-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #f0ede8;}
+.player-row:last-child{border-bottom:none;}
+.player-key{color:var(--text2);}
+.player-val{color:var(--text);font-weight:500;}
+
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.b-paid{background:#EAF3DE;color:#27500A;}
+.b-overdue{background:#FCEBEB;color:#791F1F;}
+.b-pending{background:#FAEEDA;color:#633806;}
+.b-active{background:#EAF3DE;color:#27500A;}
+.b-inactive{background:#f0ede8;color:#6b6b67;}
+.b-cat{background:#E6F1FB;color:#0C447C;}
+
+.pay-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);}
+.pay-row:last-child{border-bottom:none;}
+.pay-name{font-size:13px;font-weight:500;color:var(--text);}
+.pay-detail{font-size:11px;color:var(--text2);margin-top:2px;}
+.pay-amount{font-size:14px;font-weight:600;color:var(--red);}
+
+.loading{display:flex;align-items:center;gap:10px;padding:1.5rem;color:var(--text2);font-size:13px;}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{background:#FCEBEB;border:1px solid #F09595;border-radius:8px;padding:12px;font-size:13px;color:#791F1F;margin-bottom:1rem;}
+
+.readonly-badge{background:var(--red-light);color:var(--red-dark);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:auto;}
+
+/* Desktop adjustments */
+@media(min-width:768px){
+  .app{flex-direction:row;}
+  .topbar{display:none;}
+  .bottom-nav{display:none;}
+  .sidebar-desk{width:210px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);padding:1rem 0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;}
+  .main{margin-left:210px;padding:2rem;}
+  .stats-grid{grid-template-columns:repeat(4,1fr);}
+  .search-row input{width:auto;flex:1;}
+  .search-row select{width:auto;}
+}
+@media(max-width:767px){
+  .sidebar-desk{display:none;}
+}
+.nav-item-desk{display:flex;align-items:center;gap:10px;padding:9px 1rem;font-size:13px;cursor:pointer;color:var(--text2);border-left:2.5px solid transparent;transition:all .15s;}
+.nav-item-desk:hover{background:var(--bg2);color:var(--text);}
+.nav-item-desk.active{color:var(--red-dark);border-left-color:var(--red);background:var(--red-light);font-weight:500;}
+.nav-icon{width:16px;height:16px;flex-shrink:0;}
+.brand-desk{padding:0 1rem 1rem;border-bottom:1px solid var(--border);margin-bottom:0.75rem;}
+.brand-desk-name{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;}
+.brand-desk-sub{font-size:11px;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:5px;}
+.desk-conn-dot{width:7px;height:7px;border-radius:50%;background:#639922;flex-shrink:0;}
+.desk-conn-dot.err{background:var(--red);}
+.desk-conn-dot.loading{background:#BA7517;animation:pulse 1s ease-in-out infinite;}
+.sync-area{margin-top:auto;padding:1rem;border-top:1px solid var(--border);}
+.sync-btn{width:100%;font-size:12px;color:var(--text2);cursor:pointer;border:1px solid var(--border);background:#fff;padding:7px;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sync-btn:hover{background:var(--bg2);}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- DESKTOP SIDEBAR -->
+  <div class="sidebar-desk">
+    <div class="brand-desk">
+      <div class="brand-ball" style="width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M12 7l1.2 3.5H17l-2.9 2.1 1.1 3.4L12 14l-3.2 2 1.1-3.4L7 10.5h3.8z" fill="white"/></svg>
+      </div>
+      <div class="brand-desk-name">Sergio Ortiz Soccer</div>
+      <div class="brand-desk-sub"><span class="desk-conn-dot loading" id="desk-conn-dot"></span><span id="desk-conn-text">Conectando...</span></div>
+      <div style="margin-top:6px;"><span class="readonly-badge">Solo lectura</span></div>
+    </div>
+    <div class="nav-item-desk active" onclick="nav('dashboard',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item-desk" onclick="nav('players',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Jugadores
+    </div>
+    <div class="nav-item-desk" onclick="nav('pagos',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="10.5" r="1" fill="currentColor"/></svg>
+      Pagos
+    </div>
+    <div class="sync-area">
+      <button class="sync-btn" onclick="loadData()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M14 8A6 6 0 1 1 8 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M8 2l2.5 2.5L8 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sincronizar
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE TOPBAR -->
+  <div class="topbar">
+    <div class="brand-ball">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M12 7l1.2 3.5H17l-2.9 2.1 1.1 3.4L12 14l-3.2 2 1.1-3.4L7 10.5h3.8z" fill="white"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Sergio Ortiz Soccer</div>
+      <div class="brand-sub" id="mob-conn">Conectando...</div>
+    </div>
+    <span class="readonly-badge">Solo lectura</span>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div id="main-error"></div>
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-label">Total</div><div class="stat-value red" id="s-total">—</div></div>
+        <div class="stat"><div class="stat-label">Activos</div><div class="stat-value green" id="s-active">—</div></div>
+        <div class="stat"><div class="stat-label">Vencidos</div><div class="stat-value red" id="s-overdue">—</div></div>
+        <div class="stat"><div class="stat-label">Deuda total</div><div class="stat-value orange" id="s-debt">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Pagos vencidos</div>
+        <div id="overdue-list"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Jugadores por categoría</div>
+        <div id="cat-breakdown"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+      </div>
+    </div>
+
+    <!-- JUGADORES -->
+    <div class="view" id="view-players">
+      <div class="page-title">Jugadores</div>
+      <div class="search-row">
+        <input type="text" id="s-pl" placeholder="Buscar nombre o padre..." oninput="renderPlayers()"/>
+      </div>
+      <div class="search-row">
+        <select id="f-cat" onchange="renderPlayers()" style="flex:1;">
+          <option value="">Todas las categorías</option>
+          <option>4/5</option><option>6/7</option><option>8/9</option><option>10/11</option><option>12/13</option>
+        </select>
+        <select id="f-st" onchange="renderPlayers()" style="flex:1;">
+          <option value="">Todos</option><option>Active</option><option>Inactive</option>
+        </select>
+      </div>
+      <div id="players-list"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+    </div>
+
+    <!-- PAGOS -->
+    <div class="view" id="view-pagos">
+      <div class="page-title">Pagos</div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1rem;">
+        <div class="stat"><div class="stat-label">Al día</div><div class="stat-value green" id="ps-paid">—</div></div>
+        <div class="stat"><div class="stat-label">Pendiente</div><div class="stat-value orange" id="ps-pending">—</div></div>
+        <div class="stat"><div class="stat-label">Vencido</div><div class="stat-value red" id="ps-overdue">—</div></div>
+      </div>
+      <div class="search-row">
+        <input type="text" id="s-pay" placeholder="Buscar jugador..." oninput="renderPagos()"/>
+      </div>
+      <div class="search-row">
+        <select id="f-ps" onchange="renderPagos()" style="flex:1;">
+          <option value="">Todos los estados</option>
+          <option>Paid</option><option>Pending</option><option>Overdue</option>
+        </select>
+        <select id="f-pt" onchange="renderPagos()" style="flex:1;">
+          <option value="">Todos los tipos</option>
+          <option>Monthly</option><option>Quarterly</option><option>Custom</option><option>Scholarship</option>
+        </select>
+      </div>
+      <div id="pagos-list"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
+    </div>
+
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="bnav-item active" onclick="nav('dashboard',this)">
+      <svg class="bnav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
+      Dashboard
+    </div>
+    <div class="bnav-item" onclick="nav('players',this)">
+      <svg class="bnav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Jugadores
+    </div>
+    <div class="bnav-item" onclick="nav('pagos',this)">
+      <svg class="bnav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 7h14" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="10.5" r="1" fill="currentColor"/></svg>
+      Pagos
+    </div>
+    <div class="bnav-item" onclick="loadData()">
+      <svg class="bnav-icon" viewBox="0 0 16 16" fill="none"><path d="M14 8A6 6 0 1 1 8 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M8 2l2.5 2.5L8 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sincronizar
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbxV6sq9K_eNumUTKHcVdR3D8j_XeOm_DyN5XHJyl7BWa037v_FBM49nJkdJPGshG2jkCw/exec";
+let players = [];
+
+function ini(n){ return (n||"?").split(" ").slice(0,2).map(w=>w[0]||"").join("").toUpperCase(); }
+function psClass(s){ return s==="Paid"?"b-paid":s==="Overdue"?"b-overdue":"b-pending"; }
+function get(id){ return document.getElementById(id); }
+
+function setConn(state, msg){
+  const dot = get("desk-conn-dot");
+  const txt = get("desk-conn-text");
+  const mob = get("mob-conn");
+  if(dot) dot.className = "desk-conn-dot"+(state==="ok"?"":state==="err"?" err":" loading");
+  if(txt) txt.textContent = msg;
+  if(mob) mob.textContent = msg;
+}
+
+async function loadData(){
+  setConn("loading","Sincronizando...");
+  try {
+    const res = await fetch(API+"?action=getPlayers");
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error||"Error");
+    players = json.data.filter(p=>p["Player ID"]).map(p=>({
+      id:      p["Player ID"]||"",
+      fn:      p["Full Name"]||(((p["First Name"]||"")+" "+(p["Last Name"]||"")).trim()),
+      age:     p["Age"]||"",
+      cat:     p["Category"]||"",
+      parent:  p["Parent name"]||"",
+      phone:   (p["Phone "]||p["Phone"]||"").toString().trim(),
+      status:  p["Status"]||"Active",
+      paytype: p["Payment Type"]||"",
+      amount:  p["Amount"]||"",
+      method:  (p["Preferred Payment Method "]||p["Preferred Payment Method"]||"").toString().trim(),
+      debt:    parseFloat(p["Debt Total"])||0,
+      ps:      p["Payment Status Summary"]||"",
+      lastpay: p["Last Payment Date"]||"",
+    }));
+    setConn("ok","Conectado · "+players.length+" jugadores");
+    get("main-error").innerHTML="";
+    renderDashboard();
+    renderPlayers();
+    renderPagos();
+  } catch(e){
+    setConn("err","Sin conexión");
+    get("main-error").innerHTML='<div class="error-box">No se pudo conectar. Verifica tu internet.<br><small>'+e.message+'</small></div>';
+  }
+}
+
+function renderDashboard(){
+  const overdue=players.filter(p=>p.ps==="Overdue");
+  const debt=players.reduce((a,p)=>a+p.debt,0);
+  get("s-total").textContent=players.length;
+  get("s-active").textContent=players.filter(p=>p.status==="Active").length;
+  get("s-overdue").textContent=overdue.length;
+  get("s-debt").textContent="$"+debt.toLocaleString();
+
+  const top=[...overdue].sort((a,b)=>b.debt-a.debt).slice(0,7);
+  get("overdue-list").innerHTML=top.length?top.map(p=>`
+    <div class="pay-row">
+      <div>
+        <div class="pay-name"><span class="av" style="width:28px;height:28px;font-size:11px;display:inline-flex;margin-right:8px;vertical-align:middle;">${ini(p.fn)}</span>${p.fn}</div>
+        <div class="pay-detail">${p.phone||"Sin teléfono"} · ${p.cat||"—"}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:12px;">
+        <div class="pay-amount">$${p.debt}</div>
+        <span class="badge b-overdue" style="margin-top:3px;display:inline-block;">Vencido</span>
+      </div>
+    </div>`).join("")
+    :'<p style="font-size:13px;color:#6b6b67;padding:0.75rem 0;">Sin pagos vencidos.</p>';
+
+  const cats={"4/5":0,"6/7":0,"8/9":0,"10/11":0,"12/13":0};
+  players.filter(p=>p.status==="Active"&&p.cat).forEach(p=>{if(cats[p.cat]!==undefined)cats[p.cat]++;});
+  const max=Math.max(...Object.values(cats),1);
+  get("cat-breakdown").innerHTML=Object.entries(cats).map(([c,n])=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <span style="font-size:12px;color:#6b6b67;width:40px;">${c}</span>
+      <div style="flex:1;background:#f0ede8;border-radius:4px;height:10px;">
+        <div style="width:${Math.round(n/max*100)}%;background:var(--red);border-radius:4px;height:10px;"></div>
+      </div>
+      <span style="font-size:13px;font-weight:500;width:22px;">${n}</span>
+    </div>`).join("");
+}
+
+function renderPlayers(){
+  const q  =get("s-pl").value.toLowerCase();
+  const cat=get("f-cat").value;
+  const st =get("f-st").value;
+  const f  =players.filter(p=>{
+    const m=p.fn.toLowerCase().includes(q)||(p.parent||"").toLowerCase().includes(q);
+    return m&&(!cat||p.cat===cat)&&(!st||p.status===st);
+  });
+  const el=get("players-list");
+  if(!f.length){el.innerHTML='<p style="text-align:center;padding:2rem;color:#6b6b67;font-size:13px;">Sin resultados.</p>';return;}
+  el.innerHTML=f.map(p=>`
+    <div class="player-card">
+      <div class="player-header">
+        <div class="av">${ini(p.fn)}</div>
+        <div>
+          <div class="player-name">${p.fn}</div>
+          <div class="player-detail">${p.cat?'<span class="badge b-cat">'+p.cat+'</span>':""} ${p.age?"· "+p.age+" años":""}</div>
+        </div>
+        <span class="badge ${p.status==="Active"?"b-active":"b-inactive"}" style="margin-left:auto;">${p.status||"—"}</span>
+      </div>
+      <div class="player-row"><span class="player-key">Padre/Madre</span><span class="player-val">${p.parent||"—"}</span></div>
+      <div class="player-row"><span class="player-key">Teléfono</span><span class="player-val">${p.phone||"—"}</span></div>
+    </div>`).join("");
+}
+
+function renderPagos(){
+  get("ps-paid").textContent   =players.filter(p=>p.ps==="Paid").length;
+  get("ps-pending").textContent=players.filter(p=>p.ps==="Pending").length;
+  get("ps-overdue").textContent=players.filter(p=>p.ps==="Overdue").length;
+  const q =get("s-pay").value.toLowerCase();
+  const ps=get("f-ps").value;
+  const pt=get("f-pt").value;
+  const f =players.filter(p=>{
+    const m=p.fn.toLowerCase().includes(q);
+    return m&&(!ps||p.ps===ps)&&(!pt||p.paytype===pt);
+  });
+  const el=get("pagos-list");
+  if(!f.length){el.innerHTML='<p style="text-align:center;padding:2rem;color:#6b6b67;font-size:13px;">Sin resultados.</p>';return;}
+  el.innerHTML=f.map(p=>`
+    <div class="player-card">
+      <div class="player-header">
+        <div class="av">${ini(p.fn)}</div>
+        <div>
+          <div class="player-name">${p.fn}</div>
+          <div class="player-detail">${p.paytype} · ${p.method||"—"}</div>
+        </div>
+        <span class="badge ${psClass(p.ps)}" style="margin-left:auto;">${p.ps}</span>
+      </div>
+      <div class="player-row"><span class="player-key">Monto</span><span class="player-val">${p.amount||"—"}</span></div>
+      <div class="player-row"><span class="player-key">Deuda</span><span class="player-val" style="${p.debt>0?"color:var(--red);font-weight:600;":""}">$${p.debt}</span></div>
+      <div class="player-row"><span class="player-key">Último pago</span><span class="player-val">${p.lastpay||"—"}</span></div>
+    </div>`).join("");
+}
+
+function nav(page, el){
+  document.querySelectorAll(".nav-item-desk,.bnav-item").forEach(n=>n.classList.remove("active"));
+  document.querySelectorAll('[onclick*="nav(\''+page+'\'"]').forEach(n=>n.classList.add("active"));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  get("view-"+page).classList.add("active");
+}
+
+loadData();
+</script>
+</body>
+</html>
