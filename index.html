@@ -263,7 +263,7 @@ function setConn(state, msg){
 async function loadData(){
   setConn("loading","Sincronizando...");
   try {
-    const res = await fetch(API+"?action=getPlayers");
+    const res = await fetch(API+"?action=getPlayers&key=sos2026secure");
     const json = await res.json();
     if(!json.success) throw new Error(json.error||"Error");
     players = json.data.filter(p=>p["Player ID"]).map(p=>({
